@@ -55,6 +55,20 @@ step "generate-database-delta-report" {
     }
 }
 
+step "approve-database-delta-script" {
+    name = "Approve Database Delta Script"
+
+    action {
+        action_type = "Octopus.Manual"
+        properties = {
+            Octopus.Action.Manual.BlockConcurrentDeployments = "False"
+            Octopus.Action.Manual.Instructions = "Please approve the database delta script found in the artifacts section."
+            Octopus.Action.Manual.ResponsibleTeamIds = "dba-team,global/octopus-managers"
+        }
+        worker_pool_variable = ""
+    }
+}
+
 step "deploy-a-package" {
     name = "Deploy Trident Website"
     properties = {
@@ -146,16 +160,25 @@ step "send-an-email" {
     }
 }
 
-step "approve-database-delta-script" {
-    name = "Approve Database Delta Script"
+step "deploy-the-database-changes" {
+    name = "Deploy the Database Changes."
 
     action {
-        action_type = "Octopus.Manual"
+        action_type = "Octopus.Script"
         properties = {
-            Octopus.Action.Manual.BlockConcurrentDeployments = "False"
-            Octopus.Action.Manual.Instructions = "Please approve the database delta script found in the artifacts section."
-            Octopus.Action.Manual.ResponsibleTeamIds = "dba-team,global/octopus-managers"
+            Octopus.Action.RunOnServer = "true"
+            Octopus.Action.Script.ScriptBody = <<-EOT
+                $packagePath = $OctopusParameters["Octopus.Action.Package[Trident.Database].ExtractedPath"]
+                $connectionString = $OctopusParameters["Project.Connection.String"]
+                
+                cd $packagePath
+                $appToRun = ".\Octopus.Trident.Database.DbUp"
+                
+                & $appToRun --ConnectionString="$connectionString"
+            EOT
+            Octopus.Action.Script.ScriptSource = "Inline"
+            Octopus.Action.Script.Syntax = "PowerShell"
         }
-        worker_pool_variable = ""
+        worker_pool = "default-worker-pool"
     }
 }
