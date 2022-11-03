@@ -80,27 +80,3 @@ step "send-an-email" {
         worker_pool_variable = ""
     }
 }
-
-step "slack-send-simple-notification" {
-    condition = "Failure"
-    name = "Slack - Send Simple Notification"
-    properties = {
-        Octopus.Action.TargetRoles = "trident-web"
-    }
-
-    action {
-        properties = {
-            Octopus.Action.RunOnServer = "false"
-            Octopus.Action.Template.Id = "ActionTemplates-1"
-            Octopus.Action.Template.Version = "14"
-            ssn_Channel = "trident-deployment-notifications"
-            ssn_Color = "danger"
-            ssn_HookUrl = "#{Notification.Slack.Webhook.Url}"
-            ssn_IconUrl = "https://octopus.com/content/resources/favicon.png"
-            ssn_Message = "#{Notification.Body.Text}"
-            ssn_Title = "#{Notification.Subject.Text}"
-            ssn_Username = "Trident Project in Octopus Deploy"
-        }
-        worker_pool_variable = ""
-    }
-}
