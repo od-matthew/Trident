@@ -59,3 +59,14 @@ variable "Project.Database.User.Password" {
         environment = ["production"]
     }
 }
+
+variable "Octopus.ServiceNow.ChangeRequest.Number" {
+    value "Enter ServiceNow CR #" {
+        environment = ["production"]
+
+        prompt {
+            description = ""
+            label = ""
+        }
+    }
+}
