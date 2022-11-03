@@ -1,39 +1,3 @@
-variable "Project.Database.Server.Name" {
-    value "Trident_Dev" {
-        environment = ["development"]
-    }
-
-    value "Trident_QA" {
-        environment = ["qa"]
-    }
-
-    value "Trident_Staging" {
-        environment = ["staging"]
-    }
-
-    value "Trident_Prod" {
-        environment = ["production"]
-    }
-}
-
-variable "Project.Database.User.Name" {
-    value "Trident_User_Dev" {
-        environment = ["development"]
-    }
-
-    value "Trident_User_QA" {
-        environment = ["qa"]
-    }
-
-    value "Trident_User_Staging" {
-        environment = ["staging"]
-    }
-
-    value "Trident_User_Prod" {
-        environment = ["production"]
-    }
-}
-
 variable "Project.Database.User.Password" {
     value "Trident_User_Dev01!" {
         environment = ["development"]
