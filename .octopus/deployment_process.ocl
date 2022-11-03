@@ -27,6 +27,34 @@ step "run-octopus-deploy-runbook" {
     }
 }
 
+step "generate-database-delta-report" {
+    name = "Generate Database Delta Report"
+
+    action {
+        action_type = "Octopus.Script"
+        properties = {
+            Octopus.Action.RunOnServer = "true"
+            Octopus.Action.Script.ScriptBody = <<-EOT
+                $packagePath = $OctopusParameters["Octopus.Action.Package[Trident.Database].ExtractedPath"]
+                $connectionString = $OctopusParameters["Project.Connection.String"]
+                $environmentName = $OctopusParameters["Octopus.Environment.Name"]
+                $reportPath = $OctopusParameters["Project.Database.Report.Path"]
+                
+                cd $packagePath
+                $appToRun = ".\Octopus.Trident.Database.DbUp"
+                $generatedReport = "$reportPath\UpgradeReport.html"
+                
+                & $appToRun --ConnectionString="$connectionString" --PreviewReportPath="$reportPath"
+                
+                New-OctopusArtifact -Path "$generatedReport" -Name "$environmentName.UpgradeReport.html"
+            EOT
+            Octopus.Action.Script.ScriptSource = "Inline"
+            Octopus.Action.Script.Syntax = "PowerShell"
+        }
+        worker_pool = "default-worker-pool"
+    }
+}
+
 step "deploy-a-package" {
     name = "Deploy Trident Website"
     properties = {
@@ -118,30 +146,16 @@ step "send-an-email" {
     }
 }
 
-step "generate-database-delta-report" {
-    name = "Generate Database Delta Report"
+step "approve-database-delta-script" {
+    name = "Approve Database Delta Script"
 
     action {
-        action_type = "Octopus.Script"
+        action_type = "Octopus.Manual"
         properties = {
-            Octopus.Action.RunOnServer = "true"
-            Octopus.Action.Script.ScriptBody = <<-EOT
-                $packagePath = $OctopusParameters["Octopus.Action.Package[Trident.Database].ExtractedPath"]
-                $connectionString = $OctopusParameters["Project.Connection.String"]
-                $environmentName = $OctopusParameters["Octopus.Environment.Name"]
-                $reportPath = $OctopusParameters["Project.Database.Report.Path"]
-                
-                cd $packagePath
-                $appToRun = ".\Octopus.Trident.Database.DbUp"
-                $generatedReport = "$reportPath\UpgradeReport.html"
-                
-                & $appToRun --ConnectionString="$connectionString" --PreviewReportPath="$reportPath"
-                
-                New-OctopusArtifact -Path "$generatedReport" -Name "$environmentName.UpgradeReport.html"
-            EOT
-            Octopus.Action.Script.ScriptSource = "Inline"
-            Octopus.Action.Script.Syntax = "PowerShell"
+            Octopus.Action.Manual.BlockConcurrentDeployments = "False"
+            Octopus.Action.Manual.Instructions = "Please approve the database delta script found in the artifacts section."
+            Octopus.Action.Manual.ResponsibleTeamIds = "dba-team,global/octopus-managers"
         }
-        worker_pool = "default-worker-pool"
+        worker_pool_variable = ""
     }
 }
