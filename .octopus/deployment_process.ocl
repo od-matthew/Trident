@@ -1,0 +1,106 @@
+step "deploy-a-package" {
+    name = "Deploy Trident Website"
+    properties = {
+        Octopus.Action.MaxParallelism = "1"
+        Octopus.Action.TargetRoles = "trident-web"
+    }
+
+    action "remove-from-load-balancer" {
+        action_type = "Octopus.Script"
+        environments = ["staging", "production"]
+        name = "Remove from Load Balancer"
+        properties = {
+            Octopus.Action.RunOnServer = "true"
+            Octopus.Action.Script.ScriptBody = <<-EOT
+                $machineName = $OctopusParameters["Octopus.Machine.Name"]
+                
+                Write-Host "Remove $machineName from the Load Balancer."
+            EOT
+            Octopus.Action.Script.ScriptSource = "Inline"
+            Octopus.Action.Script.Syntax = "PowerShell"
+        }
+        worker_pool = "hosted-ubuntu"
+    }
+
+    action "deploy-a-package" {
+        action_type = "Octopus.TentaclePackage"
+        name = "Deploy Trident.Web"
+        properties = {
+            Octopus.Action.EnabledFeatures = "Octopus.Features.JsonConfigurationVariables,Octopus.Features.ConfigurationVariables,Octopus.Features.ConfigurationTransforms"
+            Octopus.Action.Package.AutomaticallyRunConfigurationTransformationFiles = "False"
+            Octopus.Action.Package.AutomaticallyUpdateAppSettingsAndConnectionStrings = "False"
+            Octopus.Action.Package.DownloadOnTentacle = "False"
+            Octopus.Action.Package.FeedId = "octopus-server-built-in"
+            Octopus.Action.Package.JsonConfigurationVariablesTargets = "appSettings.json"
+            Octopus.Action.Package.PackageId = "Trident.Web"
+        }
+        worker_pool_variable = ""
+
+        packages {
+            acquisition_location = "Server"
+            feed = "octopus-server-built-in"
+            package_id = "Trident.Web"
+            properties = {
+                SelectionMode = "immediate"
+            }
+        }
+    }
+
+    action "add-to-load-balancer" {
+        action_type = "Octopus.Script"
+        environments = ["staging", "production"]
+        name = "Add to Load Balancer"
+        properties = {
+            Octopus.Action.RunOnServer = "true"
+            Octopus.Action.Script.ScriptBody = <<-EOT
+                $machineName = $OctopusParameters["Octopus.Machine.Name"]
+                
+                Write-Host "Remove $machineName from the Load Balancer."
+            EOT
+            Octopus.Action.Script.ScriptSource = "Inline"
+            Octopus.Action.Script.Syntax = "PowerShell"
+        }
+        worker_pool = "hosted-ubuntu"
+    }
+}
+
+step "send-an-email" {
+    condition = "Always"
+    name = "Send an Email"
+
+    action {
+        action_type = "Octopus.Email"
+        is_required = true
+        properties = {
+            Octopus.Action.Email.Body = "#{Notification.Body.Text}"
+            Octopus.Action.Email.Priority = "High"
+            Octopus.Action.Email.Subject = "#{Notification.Subject.Text}"
+            Octopus.Action.Email.ToTeamIds = "trident-notifications"
+        }
+        worker_pool_variable = ""
+    }
+}
+
+step "slack-send-simple-notification" {
+    condition = "Failure"
+    name = "Slack - Send Simple Notification"
+    properties = {
+        Octopus.Action.TargetRoles = "trident-web"
+    }
+
+    action {
+        properties = {
+            Octopus.Action.RunOnServer = "false"
+            Octopus.Action.Template.Id = "ActionTemplates-1"
+            Octopus.Action.Template.Version = "14"
+            ssn_Channel = "trident-deployment-notifications"
+            ssn_Color = "danger"
+            ssn_HookUrl = "#{Notification.Slack.Webhook.Url}"
+            ssn_IconUrl = "https://octopus.com/content/resources/favicon.png"
+            ssn_Message = "#{Notification.Body.Text}"
+            ssn_Title = "#{Notification.Subject.Text}"
+            ssn_Username = "Trident Project in Octopus Deploy"
+        }
+        worker_pool_variable = ""
+    }
+}
