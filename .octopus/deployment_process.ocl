@@ -69,6 +69,29 @@ step "approve-database-delta-script" {
     }
 }
 
+step "deploy-the-database-changes" {
+    name = "Deploy the Database Changes."
+
+    action {
+        action_type = "Octopus.Script"
+        properties = {
+            Octopus.Action.RunOnServer = "true"
+            Octopus.Action.Script.ScriptBody = <<-EOT
+                $packagePath = $OctopusParameters["Octopus.Action.Package[Trident.Database].ExtractedPath"]
+                $connectionString = $OctopusParameters["Project.Connection.String"]
+                
+                cd $packagePath
+                $appToRun = ".\Octopus.Trident.Database.DbUp"
+                
+                & $appToRun --ConnectionString="$connectionString"
+            EOT
+            Octopus.Action.Script.ScriptSource = "Inline"
+            Octopus.Action.Script.Syntax = "PowerShell"
+        }
+        worker_pool = "default-worker-pool"
+    }
+}
+
 step "deploy-a-package" {
     name = "Deploy Trident Website"
     properties = {
@@ -157,28 +180,5 @@ step "send-an-email" {
             Octopus.Action.Email.ToTeamIds = "trident-notifications"
         }
         worker_pool_variable = ""
-    }
-}
-
-step "deploy-the-database-changes" {
-    name = "Deploy the Database Changes."
-
-    action {
-        action_type = "Octopus.Script"
-        properties = {
-            Octopus.Action.RunOnServer = "true"
-            Octopus.Action.Script.ScriptBody = <<-EOT
-                $packagePath = $OctopusParameters["Octopus.Action.Package[Trident.Database].ExtractedPath"]
-                $connectionString = $OctopusParameters["Project.Connection.String"]
-                
-                cd $packagePath
-                $appToRun = ".\Octopus.Trident.Database.DbUp"
-                
-                & $appToRun --ConnectionString="$connectionString"
-            EOT
-            Octopus.Action.Script.ScriptSource = "Inline"
-            Octopus.Action.Script.Syntax = "PowerShell"
-        }
-        worker_pool = "default-worker-pool"
     }
 }
