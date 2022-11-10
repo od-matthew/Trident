@@ -18,7 +18,7 @@ step "run-octopus-deploy-runbook" {
             Run.Runbook.Machines = "N/A"
             Run.Runbook.ManualIntervention.EnvironmentToUse = "#{Octopus.Environment.Name}"
             Run.Runbook.Name = "Create Trident DB"
-            Run.Runbook.Project.Name = "Trident - Section 4"
+            Run.Runbook.Project.Name = "Trident - Section 5-9"
             Run.Runbook.Space.Name = "#{Octopus.Space.Name}"
             Run.Runbook.UsePublishedSnapShot = "True"
             Run.Runbook.Waitforfinish = "True"
