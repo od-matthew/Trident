@@ -1,7 +1,22 @@
+step "calculate-deployment-mode" {
+    name = "Calculate Deployment Mode"
+
+    action {
+        properties = {
+            Octopus.Action.RunOnServer = "true"
+            Octopus.Action.Template.Id = "ActionTemplates-41"
+            Octopus.Action.Template.Version = "5"
+        }
+        worker_pool_variable = ""
+    }
+}
+
 step "run-octopus-deploy-runbook" {
+    condition = "Variable"
     name = "Create Trident Database"
     properties = {
         Octopus.Action.TargetRoles = "trident-web"
+        Octopus.Step.ConditionVariableExpression = "#{unless Octopus.Deployment.Error}#{Octopus.Action[Calculate Deployment Mode].Output.RunOnDeploy}#{/unless}"
     }
 
     action "create-trident-database" {
@@ -28,7 +43,11 @@ step "run-octopus-deploy-runbook" {
 }
 
 step "generate-database-delta-report" {
+    condition = "Variable"
     name = "Generate Database Delta Report"
+    properties = {
+        Octopus.Step.ConditionVariableExpression = "#{unless Octopus.Deployment.Error}#{Octopus.Action[Calculate Deployment Mode].Output.RunOnDeploy}#{/unless}"
+    }
 
     action {
         action_type = "Octopus.Script"
@@ -67,7 +86,11 @@ step "generate-database-delta-report" {
 }
 
 step "auto-approve-database-delta-script" {
+    condition = "Variable"
     name = "Auto-Approve Database Delta Script"
+    properties = {
+        Octopus.Step.ConditionVariableExpression = "#{unless Octopus.Deployment.Error}#{Octopus.Action[Calculate Deployment Mode].Output.RunOnDeploy}#{/unless}"
+    }
 
     action {
         properties = {
@@ -101,7 +124,11 @@ step "approve-database-delta-script" {
 }
 
 step "deploy-the-database-changes" {
+    condition = "Variable"
     name = "Deploy the Database Changes."
+    properties = {
+        Octopus.Step.ConditionVariableExpression = "#{unless Octopus.Deployment.Error}#{Octopus.Action[Calculate Deployment Mode].Output.RunOnDeploy}#{/unless}"
+    }
 
     action {
         action_type = "Octopus.Script"
