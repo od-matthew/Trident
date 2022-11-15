@@ -35,6 +35,7 @@ step "run-octopus-deploy-runbook" {
             Run.Runbook.Name = "Create Trident DB"
             Run.Runbook.Project.Name = "Trident - Section 5-9"
             Run.Runbook.Space.Name = "#{Octopus.Space.Name}"
+            Run.Runbook.Tenant.Name = "#{Retail.Tenant.Name}"
             Run.Runbook.UsePublishedSnapShot = "True"
             Run.Runbook.Waitforfinish = "True"
         }
