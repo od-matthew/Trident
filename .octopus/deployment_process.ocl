@@ -13,7 +13,7 @@ step "calculate-deployment-mode" {
 
 step "run-octopus-deploy-runbook" {
     condition = "Variable"
-    name = "Create Trident Database"
+    name = "Run Create Trident Database Runbook"
     properties = {
         Octopus.Action.TargetRoles = "trident-web"
         Octopus.Step.ConditionVariableExpression = "#{unless Octopus.Deployment.Error}#{Octopus.Action[Calculate Deployment Mode].Output.RunOnDeploy}#{/unless}"
@@ -94,6 +94,7 @@ step "auto-approve-database-delta-script" {
     }
 
     action {
+        environments = ["staging-blue", "staging-green", "staging"]
         properties = {
             Databases.AutoApproval.ReportPath = "#{Project.Database.Report.Path}\\UpgradeReport.html"
             Databases.AutoApprove.CommandsIndicatingChange = "#{SQL.Verification.Change.List}"
@@ -115,6 +116,7 @@ step "approve-database-delta-script" {
 
     action {
         action_type = "Octopus.Manual"
+        environments = ["staging-blue", "staging-green", "staging"]
         properties = {
             Octopus.Action.Manual.BlockConcurrentDeployments = "False"
             Octopus.Action.Manual.Instructions = "Please approve the database delta script found in the artifacts section."
@@ -162,48 +164,20 @@ step "deploy-the-database-changes" {
     }
 }
 
-step "deploy-a-package" {
-    name = "Deploy Trident Website"
+step "deploy-trident-web" {
+    name = "Deploy Trident.Web"
     properties = {
-        Octopus.Action.MaxParallelism = "1"
         Octopus.Action.TargetRoles = "trident-web"
     }
 
-    action "remove-from-load-balancer" {
-        action_type = "Octopus.Script"
-        environments = ["staging", "production"]
-        name = "Remove from Load Balancer"
-        properties = {
-            Octopus.Action.RunOnServer = "true"
-            Octopus.Action.Script.ScriptBody = <<-EOT
-                $machineName = $OctopusParameters["Octopus.Machine.Name"]
-                
-                Write-Host "Remove $machineName from the Load Balancer."
-                
-                # $number = Get-Random -Maximum 10
-                # Write-Host "The random number is $number"
-                # if ($number -ge 8)
-                # {
-                # Write-Host "Forcing an error."
-                # Exit 1
-                # }
-            EOT
-            Octopus.Action.Script.ScriptSource = "Inline"
-            Octopus.Action.Script.Syntax = "PowerShell"
-        }
-        worker_pool = "hosted-ubuntu"
-    }
-
-    action "deploy-a-package" {
+    action {
         action_type = "Octopus.TentaclePackage"
-        name = "Deploy Trident.Web"
         properties = {
-            Octopus.Action.EnabledFeatures = "Octopus.Features.JsonConfigurationVariables,Octopus.Features.ConfigurationVariables,Octopus.Features.ConfigurationTransforms"
-            Octopus.Action.Package.AutomaticallyRunConfigurationTransformationFiles = "False"
-            Octopus.Action.Package.AutomaticallyUpdateAppSettingsAndConnectionStrings = "False"
+            Octopus.Action.EnabledFeatures = ",Octopus.Features.ConfigurationTransforms,Octopus.Features.ConfigurationVariables"
+            Octopus.Action.Package.AutomaticallyRunConfigurationTransformationFiles = "True"
+            Octopus.Action.Package.AutomaticallyUpdateAppSettingsAndConnectionStrings = "True"
             Octopus.Action.Package.DownloadOnTentacle = "False"
             Octopus.Action.Package.FeedId = "octopus-server-built-in"
-            Octopus.Action.Package.JsonConfigurationVariablesTargets = "appSettings.json"
             Octopus.Action.Package.PackageId = "Trident.Web"
         }
         worker_pool_variable = ""
@@ -217,22 +191,51 @@ step "deploy-a-package" {
             }
         }
     }
+}
 
-    action "add-to-load-balancer" {
+step "verify-application" {
+    name = "Verify application"
+
+    action {
         action_type = "Octopus.Script"
-        environments = ["staging", "production"]
-        name = "Add to Load Balancer"
         properties = {
             Octopus.Action.RunOnServer = "true"
             Octopus.Action.Script.ScriptBody = <<-EOT
-                $machineName = $OctopusParameters["Octopus.Machine.Name"]
+                $randomNumber = Get-Random -Minimum 1 -Maximum 100
                 
-                Write-Host "Remove $machineName from the Load Balancer."
+                Write-Host "The random number is $randomNumber.  If it is above 90, this will fail the step."
+                if ($randomNumber -ge 90)
+                {
+                	Write-Host "An error occurred verifying the application."
+                    exit 1
+                }
             EOT
             Octopus.Action.Script.ScriptSource = "Inline"
             Octopus.Action.Script.Syntax = "PowerShell"
         }
-        worker_pool = "hosted-ubuntu"
+        worker_pool = "default-worker-pool"
+    }
+}
+
+step "update-load-balancer-to-blue-or-green" {
+    name = "Update Load Balancer to Blue or Green"
+    properties = {
+        Octopus.Action.TargetRoles = "trident-web"
+    }
+
+    action {
+        action_type = "Octopus.Script"
+        channels = ["release", "hotfix"]
+        properties = {
+            Octopus.Action.RunOnServer = "false"
+            Octopus.Action.Script.ScriptBody = <<-EOT
+                $currentEnvironment = $OctopusParameters["Octopus.Environment.Name"]
+                Write-Highlight "Updating load balancer to point to $currentEnvironment"
+            EOT
+            Octopus.Action.Script.ScriptSource = "Inline"
+            Octopus.Action.Script.Syntax = "PowerShell"
+        }
+        worker_pool_variable = ""
     }
 }
 
