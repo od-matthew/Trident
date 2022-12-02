@@ -94,7 +94,7 @@ step "auto-approve-database-delta-script" {
     }
 
     action {
-        environments = ["staging-blue", "staging-green", "staging"]
+        environments = ["staging"]
         properties = {
             Databases.AutoApproval.ReportPath = "#{Project.Database.Report.Path}\\UpgradeReport.html"
             Databases.AutoApprove.CommandsIndicatingChange = "#{SQL.Verification.Change.List}"
@@ -116,7 +116,7 @@ step "approve-database-delta-script" {
 
     action {
         action_type = "Octopus.Manual"
-        environments = ["staging-blue", "staging-green", "staging"]
+        environments = ["staging"]
         properties = {
             Octopus.Action.Manual.BlockConcurrentDeployments = "False"
             Octopus.Action.Manual.Instructions = "Please approve the database delta script found in the artifacts section."
@@ -218,7 +218,7 @@ step "verify-application" {
 }
 
 step "run-update-load-balancer-runbook" {
-    name = "Run Update Load Balancer Runbook"
+    name = "Schedule Run Update Load Balancer Runbook"
     properties = {
         Octopus.Action.TargetRoles = "trident-web"
     }
@@ -232,20 +232,16 @@ step "run-update-load-balancer-runbook" {
             Run.Runbook.AutoApproveManualInterventions = "No"
             Run.Runbook.Base.Url = "#{Octopus.Web.ServerUri}"
             Run.Runbook.CancelInSeconds = "1800"
-            Run.Runbook.DateTime = "N/A"
+            Run.Runbook.DateTime = "#{Project.LoadBalancer.UpdateTime}"
             Run.Runbook.Environment.Name = "#{Octopus.Environment.Name}"
             Run.Runbook.Machines = "N/A"
             Run.Runbook.ManualIntervention.EnvironmentToUse = "#{Octopus.Environment.Name}"
             Run.Runbook.Name = "Update Load Balancer Runbook"
             Run.Runbook.Project.Name = "Trident - Section 5-9"
-            Run.Runbook.PromptedVariables = <<-EOT
-                Project.Loadbalancer.Percent::#{Project.Loadbalancer.Percent}
-                Project.Loadbalancer.WaitInMinutes::#{Project.Loadbalancer.WaitInMinutes}
-                Project.Loadbalancer.HostToUpdate::#{Project.Tenant.Loadbalancer.HostName}
-            EOT
             Run.Runbook.Space.Name = "#{Octopus.Space.Name}"
+            Run.Runbook.Tenant.Name = "#{Octopus.Deployment.Tenant.Name}"
             Run.Runbook.UsePublishedSnapShot = "True"
-            Run.Runbook.Waitforfinish = "True"
+            Run.Runbook.Waitforfinish = "False"
         }
         worker_pool_variable = ""
     }
@@ -259,7 +255,7 @@ step "update-load-balancer-to-blue-or-green" {
 
     action {
         action_type = "Octopus.Script"
-        channels = ["release", "hotfix"]
+        channels = ["release-1"]
         is_disabled = true
         properties = {
             Octopus.Action.RunOnServer = "false"

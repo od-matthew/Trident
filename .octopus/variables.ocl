@@ -44,57 +44,40 @@ variable "Project.Database.Name" {
 
     value "Trident_#{Octopus.Environment.Name}_#{Retail.Tenant.ShortName}" {
         description = ""
-        environment = ["development", "qa"]
-    }
-
-    value "Trident_Staging_#{Retail.Tenant.ShortName}" {
-        description = ""
-        environment = ["staging", "staging-blue", "staging-green"]
+        environment = ["development", "qa", "staging"]
     }
 }
 
 variable "Project.Database.Report.Path" {
     value "C:\\DatabaseReports\\#{Octopus.Environment.Name}#{Retail.Tenant.ShortName}" {}
-
-    value "C:\\DatabaseReports\\Production\\#{Retail.Tenant.ShortName}" {
-        description = ""
-        environment = ["production-blue", "production-green"]
-    }
-
-    value "C:\\DatabaseReports\\Staging\\#{Retail.Tenant.ShortName}" {
-        description = ""
-        environment = ["staging-blue", "staging-green"]
-    }
-}
-
-variable "Project.Loadbalancer.HostToUpdate" {
-    value "#{Project.Tenant.Loadbalancer.HostName}" {
-        environment = ["staging-blue", "staging-green", "production-blue", "production-green"]
-        process = ["runbook/update-load-balancer-runbook"]
-
-        prompt {
-            description = ""
-            label = ""
-        }
-    }
-}
-
-variable "Project.Loadbalancer.WaitInMinutes" {
-    value "10" {
-        environment = ["staging-blue", "staging-green", "production-blue", "production-green"]
-        process = ["deployment-process", "runbook/update-load-balancer-runbook"]
-
-        prompt {
-            description = ""
-            label = ""
-        }
-    }
 }
 
 variable "Project.Loadbalancer.Percent" {
     value "10" {
         environment = ["staging-blue", "staging-green", "production-blue", "production-green"]
         process = ["deployment-process", "runbook/update-load-balancer-runbook"]
+
+        prompt {
+            description = ""
+            label = ""
+        }
+    }
+}
+
+variable "Project.LoadBalancer.UpdateTime" {
+    value "#{Retail.LoadBalancer.SwapTimeInUtc}" {
+        environment = ["production"]
+        process = ["deployment-process"]
+
+        prompt {
+            description = ""
+            label = ""
+        }
+    }
+
+    value "#{Retail.LoadBalancer.SwapTimeInUtc}" {
+        environment = ["staging"]
+        process = ["deployment-process"]
 
         prompt {
             description = ""
