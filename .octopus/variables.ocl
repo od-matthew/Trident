@@ -75,7 +75,7 @@ variable "Project.LoadBalancer.UpdateTime" {
         }
     }
 
-    value "N/A" {
+    value "#{Retail.LoadBalancer.SwapTimeInUtc}" {
         environment = ["staging"]
         process = ["deployment-process"]
 
