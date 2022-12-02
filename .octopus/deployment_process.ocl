@@ -217,45 +217,6 @@ step "verify-application" {
     }
 }
 
-step "update-load-balancer-to-blue-or-green" {
-    name = "Update Load Balancer to Blue or Green"
-    properties = {
-        Octopus.Action.TargetRoles = "trident-web"
-    }
-
-    action {
-        action_type = "Octopus.Script"
-        channels = ["release", "hotfix"]
-        properties = {
-            Octopus.Action.RunOnServer = "false"
-            Octopus.Action.Script.ScriptBody = <<-EOT
-                $currentEnvironment = $OctopusParameters["Octopus.Environment.Name"]
-                Write-Highlight "Updating load balancer to point to $currentEnvironment"
-            EOT
-            Octopus.Action.Script.ScriptSource = "Inline"
-            Octopus.Action.Script.Syntax = "PowerShell"
-        }
-        worker_pool_variable = ""
-    }
-}
-
-step "send-an-email" {
-    condition = "Always"
-    name = "Send an Email"
-
-    action {
-        action_type = "Octopus.Email"
-        is_required = true
-        properties = {
-            Octopus.Action.Email.Body = "#{Notification.Body.Text}"
-            Octopus.Action.Email.Priority = "High"
-            Octopus.Action.Email.Subject = "#{Notification.Subject.Text}"
-            Octopus.Action.Email.ToTeamIds = "trident-notifications"
-        }
-        worker_pool_variable = ""
-    }
-}
-
 step "run-update-load-balancer-runbook" {
     name = "Run Update Load Balancer Runbook"
     properties = {
@@ -285,6 +246,46 @@ step "run-update-load-balancer-runbook" {
             Run.Runbook.Space.Name = "#{Octopus.Space.Name}"
             Run.Runbook.UsePublishedSnapShot = "True"
             Run.Runbook.Waitforfinish = "True"
+        }
+        worker_pool_variable = ""
+    }
+}
+
+step "update-load-balancer-to-blue-or-green" {
+    name = "Update Load Balancer to Blue or Green"
+    properties = {
+        Octopus.Action.TargetRoles = "trident-web"
+    }
+
+    action {
+        action_type = "Octopus.Script"
+        channels = ["release", "hotfix"]
+        is_disabled = true
+        properties = {
+            Octopus.Action.RunOnServer = "false"
+            Octopus.Action.Script.ScriptBody = <<-EOT
+                $currentEnvironment = $OctopusParameters["Octopus.Environment.Name"]
+                Write-Highlight "Updating load balancer to point to $currentEnvironment"
+            EOT
+            Octopus.Action.Script.ScriptSource = "Inline"
+            Octopus.Action.Script.Syntax = "PowerShell"
+        }
+        worker_pool_variable = ""
+    }
+}
+
+step "send-an-email" {
+    condition = "Always"
+    name = "Send an Email"
+
+    action {
+        action_type = "Octopus.Email"
+        is_required = true
+        properties = {
+            Octopus.Action.Email.Body = "#{Notification.Body.Text}"
+            Octopus.Action.Email.Priority = "High"
+            Octopus.Action.Email.Subject = "#{Notification.Subject.Text}"
+            Octopus.Action.Email.ToTeamIds = "trident-notifications"
         }
         worker_pool_variable = ""
     }
