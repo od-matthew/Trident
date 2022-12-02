@@ -218,7 +218,7 @@ step "verify-application" {
 }
 
 step "run-update-load-balancer-runbook" {
-    name = "Run Update Load Balancer Runbook"
+    name = "Schedule Run Update Load Balancer Runbook"
     properties = {
         Octopus.Action.TargetRoles = "trident-web"
     }
@@ -236,7 +236,7 @@ step "run-update-load-balancer-runbook" {
             Run.Runbook.Environment.Name = "#{Octopus.Environment.Name}"
             Run.Runbook.Machines = "N/A"
             Run.Runbook.ManualIntervention.EnvironmentToUse = "#{Octopus.Environment.Name}"
-            Run.Runbook.Name = "Schedule Update Load Balancer Runbook"
+            Run.Runbook.Name = "Update Load Balancer Runbook"
             Run.Runbook.Project.Name = "Trident - Section 5-9"
             Run.Runbook.Space.Name = "#{Octopus.Space.Name}"
             Run.Runbook.Tenant.Name = "#{Octopus.Deployment.Tenant.Name}"
