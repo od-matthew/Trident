@@ -94,7 +94,7 @@ step "auto-approve-database-delta-script" {
     }
 
     action {
-        environments = ["staging-blue", "staging-green", "staging"]
+        environments = ["staging"]
         properties = {
             Databases.AutoApproval.ReportPath = "#{Project.Database.Report.Path}\\UpgradeReport.html"
             Databases.AutoApprove.CommandsIndicatingChange = "#{SQL.Verification.Change.List}"
@@ -116,7 +116,7 @@ step "approve-database-delta-script" {
 
     action {
         action_type = "Octopus.Manual"
-        environments = ["staging-blue", "staging-green", "staging"]
+        environments = ["staging"]
         properties = {
             Octopus.Action.Manual.BlockConcurrentDeployments = "False"
             Octopus.Action.Manual.Instructions = "Please approve the database delta script found in the artifacts section."
