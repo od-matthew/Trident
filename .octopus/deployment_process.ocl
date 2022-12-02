@@ -235,7 +235,7 @@ step "run-update-load-balancer-runbook" {
             Run.Runbook.DateTime = "N/A"
             Run.Runbook.Environment.Name = "#{Octopus.Environment.Name}"
             Run.Runbook.Machines = "N/A"
-            Run.Runbook.ManualIntervention.EnvironmentToUse = "No"
+            Run.Runbook.ManualIntervention.EnvironmentToUse = "#{Octopus.Environment.Name}"
             Run.Runbook.Name = "Update Load Balancer Runbook"
             Run.Runbook.Project.Name = "Trident - Section 5-9"
             Run.Runbook.PromptedVariables = <<-EOT
