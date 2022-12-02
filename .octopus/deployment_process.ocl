@@ -259,7 +259,7 @@ step "update-load-balancer-to-blue-or-green" {
 
     action {
         action_type = "Octopus.Script"
-        channels = ["release", "hotfix"]
+        channels = ["release-1"]
         is_disabled = true
         properties = {
             Octopus.Action.RunOnServer = "false"
