@@ -9,7 +9,7 @@ on:
   workflow_dispatch:
 
 env:
-  OCTOPUS_PROJECT_NAME: Trident
+  OCTOPUS_PROJECT_NAME: Trident - Section 5-9
   OCTOPUS_FEATURE_BRANCH_CHANNEL: Default
   OCTOPUS_FEATURE_BRANCH_ENVIRONMENT: Development
   OCTOPUS_RELEASE_CHANNEL: Release
